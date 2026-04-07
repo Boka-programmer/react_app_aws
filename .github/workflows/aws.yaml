@@ -1,6 +1,5 @@
 name: Build and deploy app_aws
 
-
 on:
   push:
     branches:
