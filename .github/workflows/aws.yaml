@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Use Node.js 20
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
@@ -27,41 +27,38 @@ jobs:
         working-directory: app_aws
         run: npm run build
 
-      # Крок 1: Зберігаємо зібрані файли як артефакт
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
           path: app_aws/dist
-          retention-days: 1 # Видалити артефакт через 1 день (для економії місця)
+          retention-days: 1
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      # Важливо: checkout тут не обов'язковий, якщо вам потрібен тільки dist, 
-      # але краще залишити для контексту шляхів.
-      - uses: actions/checkout@v4
-
-      # Крок 2: Завантажуємо артефакт у потрібну папку
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist-files
           path: app_aws/dist
 
-      - name: Sync dist to S3
-        uses: jakejarvis/s3-sync-action@v0.5.1
+      # Налаштування доступу до AWS (офіційний екшн)
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          args: --acl public-read --delete
-          source_dir: app_aws/dist
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-# name
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Деплой через стандартну команду AWS CLI
+      - name: Sync dist to S3
+        run: |
+          aws s3 sync app_aws/dist s3://${{ secrets.AWS_S3_BUCKET }} --acl public-read --delete
+
+
 
 
 
