@@ -2,62 +2,46 @@ name: Build and deploy app_aws
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
       - 'app_aws/**'
       - '.github/workflows/aws.yaml'
 
-jobs:
+jobs: # <--- Тільки ОДИН РАЗ на весь файл
+  
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
+      - name: Build
         working-directory: app_aws
-        run: npm ci
-
-      - name: Build app
-        working-directory: app_aws
-        run: npm run build
-
-      - name: Upload build artifact
+        run: |
+          npm ci
+          npm run build
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
           path: app_aws/dist
-          retention-days: 1
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Download build artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: dist-files
           path: app_aws/dist
-
-      # Налаштування доступу до AWS (офіційний екшн)
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
-      # Деплой через стандартну команду AWS CLI
       - name: Sync dist to S3
-        run: |
-          aws s3 sync app_aws/dist s3://${{ secrets.AWS_S3_BUCKET }} --acl public-read --delete
-
+        run: aws s3 sync app_aws/dist s3://${{ secrets.AWS_S3_BUCKET }}
 
 
 
