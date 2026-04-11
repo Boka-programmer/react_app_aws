@@ -2,7 +2,7 @@ name: Build and deploy app_aws
 
 on:
   push:
-    branches: [ main ]
+    branches:  [ main ]
     paths:
       - 'app_aws/**'
       - '.github/workflows/aws.yaml'
