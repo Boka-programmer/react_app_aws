@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-central-1" # вкажіть свій регіон
+  region = "eu-north-1" # вкажіть свій регіон
 }
 
 # Створення S3 бакета

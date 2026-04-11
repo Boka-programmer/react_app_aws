@@ -40,6 +40,8 @@ jobs: # <--- Тільки ОДИН РАЗ на весь файл
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+      - name: Identity Check
+        run: aws sts get-caller-identity    
       - name: Sync dist to S3
         run: aws s3 sync app_aws/dist s3://${{ secrets.AWS_S3_BUCKET }}
 
